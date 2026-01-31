@@ -5,7 +5,7 @@
 </div>
 
 ## About Me    
-I'm a Data Science Specialist passionate about building scalable, AI-driven solutions. With expertise in Data Analytics & Data Science, I create impactful user experiences and explore innovative projects in my free time. On top of all that,technology is my passion and I love exploring all the different areas it touches.
+I'm a AI ML Specialist passionate about building scalable, AI-driven solutions. With expertise in Data Analytics, Data Science & Machine Learning, I create impactful user experiences and explore innovative projects in my free time. On top of all that,technology is my passion and I love exploring all the different areas it touches.
 
 ## <img src='https://media.tenor.com/6JptszQgCnkAAAAj/text-work.gif' width="30"> Languages and Tools
 
