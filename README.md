@@ -39,10 +39,10 @@ I'm a AI ML Specialist passionate about building scalable, AI-driven solutions. 
   </tr>
 </table>
 
-<table align="center">
+<!-- <table align="center">
   <tr>
     <td align="center">
   <p align="center"> <img width="1000" src="asset/github-snake.svg" alt="snake"/> </p>
     </td>
   </tr>
-</table>
+</table> -->
