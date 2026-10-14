@@ -25,6 +25,7 @@ def build_world(quality):
     scene = bpy.context.scene
     world = bpy.data.worlds.new("Garden Sky")
     scene.world = world
+    world.color = (0.32, 0.5, 0.78)   # background for the Workbench animatic
     nt = world.node_tree
     nt.nodes.clear()
     out = nt.nodes.new('ShaderNodeOutputWorld')

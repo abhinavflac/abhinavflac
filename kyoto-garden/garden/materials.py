@@ -230,8 +230,28 @@ def with_translucency(nt, bsdf, color, amount):
 
 def get(name):
     if name not in _cache:
-        _cache[name] = BUILDERS[name]()
+        mat = BUILDERS[name]()
+        set_display_color(mat, VIEWPORT_COLORS.get(name, '#808080'))
+        _cache[name] = mat
     return _cache[name]
+
+
+def set_display_color(mat, hex_code):
+    """The flat colour Blender's solid view and the Workbench animatic use."""
+    mat.diffuse_color = (*srgb(hex_code), 1.0)
+
+
+VIEWPORT_COLORS = {
+    "wood_dark": '#35251a', "wood_light": '#856546', "wood_boards": '#3a2a1c', "plaster": '#ddd7ca',
+    "shoji": '#efe9da', "roof": '#3b312a', "bronze": '#6b4a2a', "granite": '#76716a', "rock": '#5f5a52',
+    "terrain": '#33501a', "bark_pine": '#6e4a37', "bark_smooth": '#625d53', "bamboo": '#55722a',
+    "needles": '#27411a', "maple_green": '#557f1f', "maple_gold": '#c79a1c', "maple_orange": '#e05a16',
+    "maple_red": '#b8240f', "maple_crimson": '#94111a', "bamboo_leaf": '#527a22', "shrub_leaf": '#2f4a15',
+    "fern": '#4f7f20', "grass": '#6a7f2c', "pampas": '#d8c08a', "koi_kohaku": '#ecc8b8', "koi_sanke": '#e8d8d0',
+    "koi_showa": '#3a2018', "koi_ogon": '#e39a2c', "koi_asagi": '#6d8091', "koi_fin": '#e8ddd0',
+    "bird_songbird": '#6a6534', "bird_dove": '#efede8', "eye": '#050505', "beak_dark": '#2b2520',
+    "beak_pink": '#c08a80', "foliage_core": '#152a0c', "dark_inside": '#070605',
+}
 
 
 # ---------------------------------------------------------------- wood

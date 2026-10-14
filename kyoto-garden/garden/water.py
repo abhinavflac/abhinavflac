@@ -102,6 +102,7 @@ def pond_material(control):
     normal = M.bump(nt, height, 1.0, 1.0)
     M.finish(nt, out, _water_bsdf(nt, normal, 0.62, 1.0, srgb('#08130f')))
     _water_settings(mat)
+    M.set_display_color(mat, '#3f6670')
     return mat
 
 
@@ -127,6 +128,7 @@ def stream_material():
     foam = M.principled(nt, srgb('#e8eeea'), 0.6, normal, Alpha=0.9)
     M.finish(nt, out, M.mix_shader(nt, foam_amount, water, foam))
     _water_settings(mat)
+    M.set_display_color(mat, '#4f7680')
     return mat
 
 
@@ -143,6 +145,7 @@ def falling_water_material():
     bsdf = M.principled(nt, color, 0.05, M.bump(nt, streaks.outputs[0], 0.3, 0.01), IOR=1.333, Alpha=alpha)
     M.finish(nt, out, bsdf)
     _water_settings(mat)
+    M.set_display_color(mat, '#e6eeee')
     return mat
 
 
