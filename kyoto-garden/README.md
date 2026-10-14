@@ -29,27 +29,30 @@ Shots overlap by 0.8 s for the dissolves.
 
 ## Making the film
 
-Run these from the repository root.
+Only Blender is needed. From the repository root:
 
 ```sh
-# 1. Build the scene (saves kyoto-garden/renders/garden_final.blend)
-blender -b -P kyoto-garden/build_scene.py -- --quality final
-
-# 2. Render all four shots (resumable; run it again to continue)
-blender -b kyoto-garden/renders/garden_final.blend -P kyoto-garden/render_shots.py
-
-# 3. Make the soundtrack
-python3 kyoto-garden/sound.py
-
-# 4. Join shots, dissolves and sound into the film
-python3 kyoto-garden/assemble.py --frames kyoto-garden/renders/final
+blender -b -P kyoto-garden/make_film.py -- --quality final
 ```
 
-The film is written to `kyoto-garden/renders/kyoto_garden.mp4`.
+This builds the scene, renders all four shots, makes the soundtrack and cuts
+the film, writing `kyoto-garden/renders/kyoto_garden_final.mp4`. If it is
+interrupted, run the same command again and it carries on from the frames
+already rendered.
+
+On Windows, give the full path to Blender, for example in PowerShell:
+
+```powershell
+& "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b -P kyoto-garden\make_film.py -- --quality final
+```
+
+On laptops with two graphics chips, set Blender to use the NVIDIA card
+(Windows Settings > System > Display > Graphics > blender.exe > High
+performance), otherwise it renders on the much slower built-in chip.
 
 ### Quicker checks
 
-- `--quality draft` or `--quality preview` builds a lighter scene (fewer
+- `--quality preview` makes a lighter version of the whole film quickly; `--quality draft` lighter still. Either builds a lighter scene (fewer
   plants, fewer samples, lower resolution).
 - `--still 4:2.5` renders a single frame from shot 4 at 2.5 seconds.
 - `render_shots.py -- --engine BLENDER_WORKBENCH` renders a fast, flat-shaded

@@ -71,10 +71,14 @@ def main():
         out_root = args.out or os.path.join(HERE, "renders", "animatic")
     elif args.engine:
         scene.render.engine = args.engine
-    scene.render.use_overwrite = False
-    scene.render.use_placeholder = True
+    shots = [int(s) for s in args.shots.split(",") if s.strip()]
+    render_frames(scene, shots, out_root, args.step)
+
+
+def render_frames(scene, shots, out_root, step=1):
+    """Render the given shots (1-4) into out_root/shot<N>/####.png."""
     markers = {m.name: m.camera for m in scene.timeline_markers}
-    for shot in (int(s) for s in args.shots.split(",") if s.strip()):
+    for shot in shots:
         index = shot - 1
         name = config.SHOTS[index]["name"]
         scene.camera = markers[name]
@@ -83,7 +87,7 @@ def main():
         os.makedirs(folder, exist_ok=True)
         t0 = time.time()
         done = 0
-        for frame in range(start, end + 1, args.step):
+        for frame in range(start, end + 1, step):
             path = os.path.join(folder, f"{frame - start:04d}.png")
             if not claim(path):
                 continue
