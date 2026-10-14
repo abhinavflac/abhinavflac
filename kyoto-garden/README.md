@@ -25,7 +25,7 @@ Shots overlap by 0.8 s for the dissolves.
 - Blender 5.2 (tested with 5.2.2 LTS). EEVEE is used for rendering.
 - A graphics card for the final render. A modern NVIDIA/AMD card renders the
   final film in roughly a few hours.
-- Python 3 with numpy, and ffmpeg, for the soundtrack and final assembly.
+- Nothing else: the soundtrack and the final cut are made inside Blender.
 
 ## Making the film
 
