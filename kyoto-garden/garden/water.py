@@ -115,16 +115,16 @@ def stream_material():
     vec = M.combine(nt, M.math(nt, 'MULTIPLY', u, 2.5), M.math(nt, 'MULTIPLY', flow_v, 1.0), 0.0)
     ripples = M.noise(nt, vec, 6.0, detail=4.0, dims='3D')
     fine = M.noise(nt, M.combine(nt, M.math(nt, 'MULTIPLY', u, 6.0), M.math(nt, 'MULTIPLY', flow_v, 3.0), 0.0),
-                   10.0, detail=2.0)
+                   6.0, detail=1.0)
     foam_mask = M.attribute(nt, "foam")
     height = M.math(nt, 'ADD', M.math(nt, 'MULTIPLY', ripples.outputs[0], 0.006),
                     M.math(nt, 'MULTIPLY', fine.outputs[0], 0.002))
     height = M.math(nt, 'MULTIPLY', height, M.math(nt, 'ADD', 1.0, M.math(nt, 'MULTIPLY', foam_mask, 2.0)))
     normal = M.bump(nt, height, 1.0, 1.0)
-    water = _water_bsdf(nt, normal, 0.3, 0.95, srgb('#0d1a12'))
+    water = _water_bsdf(nt, normal, 0.7, 0.97, srgb('#0d1a12'))
     foam_noise = M.noise(nt, M.combine(nt, M.math(nt, 'MULTIPLY', u, 4.0), M.math(nt, 'MULTIPLY', flow_v, 1.5), 0.0),
                          9.0, detail=5.0)
-    foam_amount = M.math(nt, 'MULTIPLY', foam_mask, M.maprange(nt, foam_noise.outputs[0], 0.45, 0.65))
+    foam_amount = M.math(nt, 'MULTIPLY', foam_mask, M.maprange(nt, foam_noise.outputs[0], 0.55, 0.72))
     foam = M.principled(nt, srgb('#e8eeea'), 0.6, normal, Alpha=0.9)
     M.finish(nt, out, M.mix_shader(nt, foam_amount, water, foam))
     _water_settings(mat)
@@ -180,7 +180,7 @@ def _stream_mesh(coll, material):
             cascade = math.exp(-((arc - layout.CASCADE_ARC - 0.35) / 0.6) ** 2)
             dist_spout = math.hypot(p[0] - tip[0], p[1] - tip[1])
             splash = math.exp(-(dist_spout / 0.35) ** 2)
-            foam.append(min(1.0, cascade * 0.9 + splash))
+            foam.append(min(1.0, cascade * 0.45 + splash))
         rows.append((row, arc, w))
     for i in range(len(rows) - 1):
         (r0, a0, w0), (r1, a1, w1) = rows[i], rows[i + 1]

@@ -245,7 +245,7 @@ VIEWPORT_COLORS = {
     "wood_dark": '#35251a', "wood_light": '#856546', "wood_boards": '#3a2a1c', "plaster": '#ddd7ca',
     "shoji": '#efe9da', "roof": '#3b312a', "bronze": '#6b4a2a', "granite": '#76716a', "rock": '#5f5a52',
     "terrain": '#33501a', "bark_pine": '#6e4a37', "bark_smooth": '#625d53', "bamboo": '#55722a',
-    "needles": '#27411a', "maple_green": '#557f1f', "maple_gold": '#c79a1c', "maple_orange": '#e05a16',
+    "needles": '#27411a', "needle_mass": '#1a2e10', "maple_green": '#557f1f', "maple_gold": '#c79a1c', "maple_orange": '#e05a16',
     "maple_red": '#b8240f', "maple_crimson": '#94111a', "bamboo_leaf": '#527a22', "shrub_leaf": '#2f4a15',
     "fern": '#4f7f20', "grass": '#6a7f2c', "pampas": '#d8c08a', "koi_kohaku": '#ecc8b8', "koi_sanke": '#e8d8d0',
     "koi_showa": '#3a2018', "koi_ogon": '#e39a2c', "koi_asagi": '#6d8091', "koi_fin": '#e8ddd0',
@@ -424,9 +424,10 @@ def terrain():
 
     # Moss carpet with cushions and colour drift.
     drift = noise(nt, pos, 0.25, detail=4.0)
-    moss_col = ramp(nt, drift.outputs[0], [(0.25, srgb('#1c300a')), (0.5, srgb('#2c4710')), (0.75, srgb('#45631a'))])
+    moss_col = ramp(nt, drift.outputs[0], [(0.25, srgb('#15250a')), (0.5, srgb('#213a0d')), (0.75, srgb('#365214'))])
     patches = noise(nt, pos, 1.3, detail=6.0)
-    moss_col = mix(nt, maprange(nt, patches.outputs[0], 0.35, 0.65, 0.0, 0.5), moss_col, srgb('#5a6e22'))
+    moss_col = mix(nt, maprange(nt, patches.outputs[0], 0.35, 0.65, 0.0, 0.4), moss_col, srgb('#4a5e1c'))
+    moss_col = mix(nt, maprange(nt, patches.outputs[0], 0.6, 0.3, 0.0, 0.5), moss_col, srgb('#101c08'))
     cushions = voronoi(nt, pos, 16.0)
     fine = noise(nt, pos, 90.0, detail=3.0)
     moss_col = mix(nt, math(nt, 'MULTIPLY', fine.outputs[0], 0.35), moss_col, srgb('#7f9a32'), 'OVERLAY')
@@ -560,6 +561,20 @@ def foliage(name, colors, translucency=0.35, rough=0.5, vein_lobes=0.0, tip_colo
     return mat
 
 
+def needle_mass():
+    """Inner bulk of a pine or cedar crown: clumpy, dark in the gaps, never smooth."""
+    mat, nt, out = new_material("Needle Mass")
+    obj = coords(nt).outputs['Object']
+    clumps = voronoi(nt, obj, 7.0)
+    lit = maprange(nt, clumps.outputs['Distance'], 0.05, 0.55, 1.0, 0.0)
+    strands = noise(nt, obj, 70.0, detail=5.0, rough=0.7)
+    fac = math(nt, 'ADD', math(nt, 'MULTIPLY', lit, 0.65), math(nt, 'MULTIPLY', strands.outputs[0], 0.45))
+    color = ramp(nt, fac, [(0.2, srgb('#081205')), (0.55, srgb('#1a2e10')), (0.85, srgb('#30491c'))])
+    bsdf = principled(nt, color, 0.85, bump(nt, fac, 1.0, 0.06), Specular_IOR_Level=0.25)
+    finish(nt, out, with_translucency(nt, bsdf, srgb('#2d4a18'), 0.12))
+    return mat
+
+
 def needles():
     return foliage("Pine Needles", ['#1d3412', '#27411a', '#34521f'], translucency=0.25, rough=0.45)
 
@@ -672,6 +687,7 @@ BUILDERS = {
     "bark_smooth": bark_smooth,
     "bamboo": bamboo,
     "needles": needles,
+    "needle_mass": needle_mass,
     "maple_green": maple_leaf("green"),
     "maple_gold": maple_leaf("gold"),
     "maple_orange": maple_leaf("orange"),

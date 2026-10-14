@@ -182,6 +182,7 @@ def songbird(coll):
     head.parent = body
     head.location = (0, 0.042, 0.068)
     body.location = perch
+    body.scale = (1.5, 1.5, 1.5)   # a bulbul-sized bird, easier to read on screen
     body.rotation_euler = (0.0, 0.0, math.atan2(-forward.x, forward.y))
     # Quick, bird-like head turns with pauses in between.
     turns = [(0.0, 0), (0.9, 0), (1.05, 38), (2.0, 38), (2.12, -25), (3.3, -25), (3.45, 12), (4.4, 12),

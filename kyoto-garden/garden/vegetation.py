@@ -214,7 +214,7 @@ def needle_tuft_builder(seed, needles=26, twig=True):
         spread = math.radians(rnd.uniform(15, 58))
         length = rnd.uniform(0.11, 0.17)
         d = Vector((math.sin(spread) * math.cos(ang), math.sin(spread) * math.sin(ang), math.cos(spread)))
-        side = d.cross(UP if abs(d.z) < 0.99 else Vector((1, 0, 0))).normalized() * 0.0018
+        side = d.cross(UP if abs(d.z) < 0.99 else Vector((1, 0, 0))).normalized() * 0.0026
         p0 = Vector((0, 0, 0))
         p1 = d * length * 0.55 + Vector((0, 0, 0.008))
         p2 = d * length + Vector((0, 0, 0.012))
@@ -442,9 +442,56 @@ def pad_points(rnd, pads, density, per_area=140, size=(1.3, 1.9)):
     return points
 
 
-def pad_cores(mb, pads, mat, scale=0.66):
-    for centre, radii in pads:
-        mb.ellipsoid(centre - Vector((0, 0, radii.z * 0.15)), radii * scale, None, 6, 10, mat)
+def lumpy_ellipsoid(mb, centre, radii, seed, mat, rings=8, segments=14, amount=0.24, flat_base=0.55):
+    """A clumpy foliage mass: an ellipsoid pushed in and out by noise, flatter
+    underneath like a pruned pine pad."""
+    offset = Vector((seed * 7.1, seed * 3.3, seed * 1.7))
+    rows = []
+    for i in range(rings + 1):
+        phi = math.pi * i / rings
+        row = []
+        for j in range(segments + 1):
+            th = 2 * math.pi * (j % segments) / segments
+            d = Vector((math.sin(phi) * math.cos(th), math.sin(phi) * math.sin(th), math.cos(phi)))
+            k = 1.0 + amount * noise.noise(d * 2.2 + offset) + 0.08 * noise.noise(d * 6.0 + offset)
+            z = d.z * (flat_base if d.z < 0 else 1.0)
+            row.append(mb.vert(centre + Vector((d.x * radii.x, d.y * radii.y, z * radii.z)) * k))
+        rows.append(row)
+    for i in range(rings):
+        for j in range(segments):
+            mb.face((rows[i][j], rows[i + 1][j], rows[i + 1][j + 1], rows[i][j + 1]), None, mat)
+
+
+def pad_cores(mb, pads, mat, scale=0.72):
+    for i, (centre, radii) in enumerate(pads):
+        lumpy_ellipsoid(mb, centre - Vector((0, 0, radii.z * 0.1)), radii * scale, i, mat)
+
+
+def conifer_crown(mb, height, radius, seed, mat, base=0.28):
+    """A tiered, clumpy cone for a cedar. Returns surface samples (point,
+    normal) for scattering needle tufts on it."""
+    rings, segments = 22, 18
+    offset = Vector((seed * 5.3, seed * 2.9, 0.0))
+    grid, samples = [], []
+    for i in range(rings + 1):
+        t = i / rings
+        z = height * util.lerp(base, 1.02, t)
+        r = radius * (1 - t) ** 0.85 * (1 + 0.16 * math.sin(t * math.pi * 7)) + 0.05
+        row = []
+        for j in range(segments + 1):
+            th = 2 * math.pi * (j % segments) / segments
+            d = Vector((math.cos(th), math.sin(th), 0.0))
+            k = 1.0 + 0.3 * noise.noise(Vector((d.x * 1.5, d.y * 1.5, z * 0.7)) + offset)
+            p = Vector((d.x * r * k, d.y * r * k, z))
+            row.append(mb.vert(p))
+            if j < segments and 0 < i < rings:
+                samples.append((p, (d + Vector((0, 0, 0.6))).normalized(), r))
+        grid.append(row)
+    for i in range(rings):
+        for j in range(segments):
+            mb.face((grid[i][j], grid[i][j + 1], grid[i + 1][j + 1], grid[i + 1][j]), None, mat)
+    mb.face(list(reversed(grid[0][:-1])), None, mat)
+    return samples
 
 
 def grow_cedar(rnd, base, height):
@@ -487,7 +534,7 @@ def pine_tree(coll, src, name, base, height, lean, density, reach=(), pad_scale=
     mb = util.MeshBuilder()
     axes_mesh(mb, axes, 0)
     pad_cores(mb, pads, 1)
-    trunk = mb.to_object(f"{name} wood", coll, [materials.get("bark_pine"), materials.get("needles")],
+    trunk = mb.to_object(f"{name} wood", coll, [materials.get("bark_pine"), materials.get("needle_mass")],
                          smooth=True)
     pts = pad_points(rnd, pads, density)
     scatter(f"{name} needles", coll, src.needles, [p[0] for p in pts], [p[1] for p in pts], [p[2] for p in pts],
@@ -618,16 +665,16 @@ def bamboo_culm(rnd, height, radius):
     leaf_mb = util.MeshBuilder()
     for i in range(int(nodes * 0.22), nodes):
         p = pts[i * 3]
-        for k in range(rnd.randint(2, 3)):
+        for k in range(rnd.randint(2, 4)):
             az = i * 2.1 + k * math.pi + rnd.uniform(-0.3, 0.3)
             twig_d = Vector((math.cos(az), math.sin(az), rnd.uniform(0.4, 0.9))).normalized()
             tw_len = rnd.uniform(0.35, 0.8) * (1.1 - (i / nodes) * 0.4)
             twig = [p + twig_d * tw_len * s + Vector((0, 0, -0.15 * tw_len * s * s)) for s in (0, 0.5, 1.0)]
             mb.tube(twig, [0.006, 0.004, 0.003], 3, 0, cap_end=False)
-            for j in range(rnd.randint(7, 11)):
-                s = rnd.uniform(0.2, 1.0)
+            for j in range(rnd.randint(11, 16)):
+                s = rnd.uniform(0.15, 1.0)
                 q = twig[0].lerp(twig[1], min(s * 2, 1)) if s < 0.5 else twig[1].lerp(twig[2], (s - 0.5) * 2)
-                leaf = blade_builder(rnd.uniform(0.15, 0.22), rnd.uniform(0.018, 0.026), 4, 0.15,
+                leaf = blade_builder(rnd.uniform(0.17, 0.25), rnd.uniform(0.03, 0.04), 4, 0.15,
                                      rnd.uniform(0.3, 0.8), True)
                 out = Vector((twig_d.x, twig_d.y, 0)).normalized() + util.rand_unit(rnd) * 0.8
                 out.z = -abs(out.z) * 0.5 - 0.2
@@ -686,15 +733,29 @@ def forest_variants(src_clusters, src_far_needles, density, rnd):
             mb.to_object(f"{name} wood", coll, [materials.get("bark_smooth")], smooth=True)
             scatter(f"{name} leaves", coll, src_clusters, [l[0] for l in leaves], [l[1] for l in leaves],
                     [l[2] * 4.5 for l in leaves], [l[3] for l in leaves], flutter=0.1)
+        elif kind == "cedar":
+            height = rnd.uniform(13, 18)
+            mb = util.MeshBuilder()
+            trunk = grow(Vector((0, 0, -0.3)), tilted(rnd, UP, 0.03), height * 0.9, 0.2 + height * 0.012, 0.04,
+                         rnd, 0, step=0.6, bend=0.02, rise=0.05)
+            axes_mesh(mb, [trunk], 0)
+            samples = conifer_crown(mb, height, height * rnd.uniform(0.2, 0.25), len(variants), 1)
+            mb.to_object(f"{name} wood", coll, [materials.get("bark_pine"), materials.get("needle_mass")],
+                         smooth=True)
+            pts = []
+            for p, n, r in samples:
+                for _ in range(max(1, int(r * 2.5 * density ** 0.5))):
+                    q = p + util.rand_unit(rnd) * 0.25
+                    pts.append((q, basis_euler(tilted(rnd, n, 0.4), util.rand_unit(rnd)), rnd.uniform(3.4, 4.6),
+                                rnd.randint(0, 2)))
+            scatter(f"{name} needles", coll, src_far_needles, [p[0] for p in pts], [p[1] for p in pts],
+                    [p[2] for p in pts], [p[3] for p in pts], flutter=0.05)
         else:
-            if kind == "cedar":
-                axes, pads = grow_cedar(rnd, (0, 0, 0), rnd.uniform(13, 18))
-            else:
-                axes, pads = grow_pine(rnd, (0, 0, 0), rnd.uniform(8, 11), (rnd.uniform(0, 360), 6), density)
+            axes, pads = grow_pine(rnd, (0, 0, 0), rnd.uniform(8, 11), (rnd.uniform(0, 360), 6), density)
             mb = util.MeshBuilder()
             axes_mesh(mb, axes, 0)
             pad_cores(mb, pads, 1, 0.85)
-            mb.to_object(f"{name} wood", coll, [materials.get("bark_pine"), materials.get("needles")],
+            mb.to_object(f"{name} wood", coll, [materials.get("bark_pine"), materials.get("needle_mass")],
                          smooth=True)
             pts = pad_points(rnd, pads, 1.0, per_area=2.5 * density ** 0.5, size=(3.4, 4.6))
             scatter(f"{name} needles", coll, src_far_needles, [p[0] for p in pts], [p[1] for p in pts],
