@@ -61,11 +61,24 @@ def build_world(quality):
     bg = M.node(nt, 'ShaderNodeBackground', inputs={'Color': color, 'Strength': 1.0})
     M.plug(nt, bg, out.inputs['Surface'])
 
-    if quality["volumetrics"]:
-        haze = M.node(nt, 'ShaderNodeVolumePrincipled', inputs={
-            'Color': srgb('#dfe6ee'), 'Density': 0.0016, 'Anisotropy': 0.55})
-        M.plug(nt, haze, out.inputs['Volume'])
     return world
+
+
+def build_haze(coll):
+    """Light atmospheric haze in a large box around the garden. EEVEE treats a
+    world volume as infinitely deep, which blocks all sun and sky light, so
+    the haze must be a bounded object instead."""
+    mat, nt, out = M.new_material("Haze")
+    haze = M.node(nt, 'ShaderNodeVolumePrincipled', inputs={
+        'Color': srgb('#dfe6ee'), 'Density': 0.0016, 'Anisotropy': 0.55})
+    M.plug(nt, haze, out.inputs['Volume'])
+    M.set_display_color(mat, '#dfe6ee')
+    mb = util.MeshBuilder()
+    mb.box((-70.0, -60.0, -5.0), (90.0, 90.0, 60.0))
+    obj = mb.to_object("Haze", coll, [mat])
+    obj.display_type = 'BOUNDS'
+    obj.visible_shadow = False
+    return obj
 
 
 def build_sun(coll):

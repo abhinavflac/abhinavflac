@@ -60,6 +60,8 @@ def build(quality_name, skip):
     lighting.configure_render(quality)
     step("sky", lighting.build_world, quality)
     step("sun", lighting.build_sun, util.collection("Lighting"))
+    if quality["volumetrics"]:
+        step("haze", lighting.build_haze, util.collection("Lighting"))
     step("terrain", terrain.build, util.collection("Terrain"))
     step("pavilion", pavilion.build, util.collection("Pavilion"))
     if "props" not in skip:
