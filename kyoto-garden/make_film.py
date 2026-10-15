@@ -56,9 +56,11 @@ def cut_film(quality_name, frames_root, audio_path, out_path):
     shots = []
     for i, shot in enumerate(config.SHOTS):
         folder = os.path.join(frames_root, f"shot{i + 1}")
-        files = sorted(f for f in os.listdir(folder) if f.endswith(".png"))
+        files = sorted(f for f in os.listdir(folder)
+                       if f.endswith(".png") and os.path.getsize(os.path.join(folder, f)) > 0)
         if len(files) < shot["length"]:
-            raise RuntimeError(f"{folder} has {len(files)} frames, expected {shot['length']}")
+            raise RuntimeError(f"{folder} has {len(files)} finished frames, expected {shot['length']}; "
+                               "run the same command again to finish rendering")
         strip = strips.new_image(f"Shot {i + 1}", os.path.join(folder, files[0]), 1 + i % 2, start,
                                  fit_method='FIT')
         for name in files[1:shot["length"]]:
