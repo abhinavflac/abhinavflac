@@ -86,9 +86,9 @@ def render_frames(scene, shots, out_root, step=1):
         folder = os.path.join(out_root, f"shot{shot}")
         os.makedirs(folder, exist_ok=True)
         # Empty files are frames an interrupted run never finished.
-        for name in os.listdir(folder):
-            path = os.path.join(folder, name)
-            if name.endswith(".png") and os.path.getsize(path) == 0:
+        for file_name in os.listdir(folder):
+            path = os.path.join(folder, file_name)
+            if file_name.endswith(".png") and os.path.getsize(path) == 0:
                 os.remove(path)
         t0 = time.time()
         done = 0
